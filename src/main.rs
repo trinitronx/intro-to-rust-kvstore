@@ -8,7 +8,8 @@ fn main() {
         .next()
         .expect("No value passed! Did you forget to pass args: key value");
     println!("key: {} = {}", key, value);
-    let path = "/tmp/kvstore.db";
+    let filename = "/tmp/kvstore.db";
+    let path = PathBuf::new().with_file_name(filename);
 
     // let contents = format!("{}\t{}\n", key, value);
     // let result = std::fs::write(path, contents);
@@ -21,7 +22,7 @@ fn main() {
     //         panic!("Error writing to db file: {path}\n{e}");
     //     }
     // }
-    let database = Database::new(path.into()).expect(format!("Database::new(\"{path}\") crashed").as_str());
+    let database = Database::new(path).expect(format!("Database::new(\"{:#?}\") crashed", filename).as_str());
 }
 
 struct Database {
@@ -32,12 +33,6 @@ struct Database {
 impl Database {
     fn new(db_filepath: PathBuf) -> Result<Database, Error> {
         // read the DB file
-        // let contents = match std::fs::read_to_string(&db_filepath) {
-        //     Ok(c) => c,
-        //     Err(e) => {
-        //         return Err(e);
-        //     }
-        // };
         let mut m: HashMap<String, String> = HashMap::new();
         let contents = std::fs::read_to_string(&db_filepath)?;
         // parse the string
