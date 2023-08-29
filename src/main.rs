@@ -32,12 +32,13 @@ struct Database {
 impl Database {
     fn new(db_filepath: PathBuf) -> Result<Database, Error> {
         // read the DB file
-        let contents = match std::fs::read_to_string(&db_filepath) {
-            Ok(c) => c,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        // let contents = match std::fs::read_to_string(&db_filepath) {
+        //     Ok(c) => c,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+        let contents = std::fs::read_to_string(&db_filepath)?;
         // parse the string
         // populate our map
         Database {
