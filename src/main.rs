@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Error, path::PathBuf};
+use std::{collections::HashMap, io::Error, path::PathBuf, hash::Hash};
 fn main() {
     let mut argv = std::env::args().skip(1);
     let key = argv
@@ -8,10 +8,9 @@ fn main() {
         .next()
         .expect("No value passed! Did you forget to pass args: key value");
     println!("key: {} = {}", key, value);
-    let contents = format!("{}\t{}\n", key, value);
     let path = "/tmp/kvstore.db";
 
-    let database = Database::new(path.into());
+    // let contents = format!("{}\t{}\n", key, value);
     // let result = std::fs::write(path, contents);
     // match result {
     //     Ok(()) => {
@@ -22,6 +21,7 @@ fn main() {
     //         panic!("Error writing to db file: {path}\n{e}");
     //     }
     // }
+    let database = Database::new(path.into()).expect(format!("Database::new(\"{path}\") crashed").as_str());
 }
 
 struct Database {
@@ -38,13 +38,18 @@ impl Database {
         //         return Err(e);
         //     }
         // };
+        let mut m: HashMap<String, String> = HashMap::new();
         let contents = std::fs::read_to_string(&db_filepath)?;
         // parse the string
-        // populate our map
-        Database {
-            path: db_filepath,
-            map: HashMap::new(),
+        for line in contents.lines() {
+            let (key, value) = line.split_once('\t').expect("Corrupt database");
+            m.insert(key.to_owned(), value.to_owned());
         }
+        // populate our map
+        Ok(Database {
+            path: db_filepath,
+            map: m,
+        })
     }
 
     // fn insert() -> Result<(), Error> {
