@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Error, path::PathBuf, hash::Hash};
+use std::{collections::HashMap, io::Error, path::PathBuf};
 fn main() {
     let mut argv = std::env::args().skip(1);
     let key = argv
@@ -11,20 +11,25 @@ fn main() {
     let filename = "/tmp/kvstore.db";
     let path = PathBuf::new().with_file_name(filename);
 
-    // let contents = format!("{}\t{}\n", key, value);
-    // let result = std::fs::write(path, contents);
-    // match result {
-    //     Ok(()) => {
-    //         println!("Successfully wrote to db file: {path}\n");
-    //         std::process::exit(0);
-    //     }
-    //     Err(e) => {
-    //         panic!("Error writing to db file: {path}\n{e}");
-    //     }
-    // }
-    let database = Database::new(path).expect(format!("Database::new(\"{:#?}\") crashed", filename).as_str());
+    if !path.exists() {
+        let contents = format!("{}\t{}\n", key, value);
+        let result = std::fs::write(path, contents);
+        match result {
+            Ok(()) => {
+                println!("Successfully wrote to db file: {filename}\n");
+                std::process::exit(0);
+            }
+            Err(e) => {
+                panic!("Error writing to db file: {filename}\n{e}");
+            }
+        }
+    }
+    let database =
+        Database::new(path).expect(format!("Database::new(\"{:#?}\") crashed", filename).as_str());
+    println!("Database is: {:?}", database);
 }
 
+#[derive(Debug)]
 struct Database {
     path: PathBuf,
     map: HashMap<String, String>,
