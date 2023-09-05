@@ -43,7 +43,7 @@ impl Database {
 
     // fn insert() -> Result<(), Error> {
     fn insert(&self, key: String, value: String) -> () {
-        todo!("Implement Database.insert()");
+        self.map.insert(key, value);
     }
 
     fn save(&self, filename: &str) -> Result<(), Error> {
