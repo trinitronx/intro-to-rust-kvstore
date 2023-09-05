@@ -11,23 +11,11 @@ fn main() {
     let filename = "/tmp/kvstore.db";
     let path = PathBuf::new().with_file_name(filename);
 
-    if !path.exists() {
-        let contents = format!("{}\t{}\n", key, value);
-        let result = std::fs::write(path, contents);
-        match result {
-            Ok(()) => {
-                println!("Successfully wrote to db file: {filename}\n");
-                std::process::exit(0);
-            }
-            Err(e) => {
-                panic!("Error writing to db file: {filename}\n{e}");
-            }
-        }
-    }
     let database =
         Database::new(path).expect(format!("Database::new(\"{:#?}\") crashed", filename).as_str());
     println!("Database is: {:?}", database);
     database.insert(key, value);
+    // database.save(filename);
 }
 
 #[derive(Debug)]
@@ -53,11 +41,28 @@ impl Database {
         })
     }
 
+    // fn insert() -> Result<(), Error> {
     fn insert(&self, key: String, value: String) -> () {
-        todo!()
+        todo!("Implement Database.insert()");
     }
 
-    // fn insert() -> Result<(), Error> {
-
-    // }
+    fn save(&self, filename: &str) -> Result<(), Error> {
+        todo!("Implement Database.save(): Save and write Database to file.");
+        // Original main() implementation:
+        // if !path.exists() {
+        //     let contents = format!("{}\t{}\n", key, value);
+        //     let result = std::fs::write(path, contents);
+        //     match result {
+        //         Ok(()) => {
+        //             println!("Successfully wrote to db file: {filename}\n");
+        //             // TODO: return Result(Ok());
+        //             // std::process::exit(0);
+        //         }
+        //         Err(e) => {
+        //             return std::io::Error
+        //             // panic!("Error writing to db file: {filename}\n{e}");
+        //         }
+        //     }
+        // }
+    }
 }
