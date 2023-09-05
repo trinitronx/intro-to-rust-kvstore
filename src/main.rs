@@ -27,6 +27,7 @@ fn main() {
     let database =
         Database::new(path).expect(format!("Database::new(\"{:#?}\") crashed", filename).as_str());
     println!("Database is: {:?}", database);
+    database.insert(key, value);
 }
 
 #[derive(Debug)]
@@ -50,6 +51,10 @@ impl Database {
             path: db_filepath,
             map: m,
         })
+    }
+
+    fn insert(&self, key: String, value: String) -> () {
+        todo!()
     }
 
     // fn insert() -> Result<(), Error> {
