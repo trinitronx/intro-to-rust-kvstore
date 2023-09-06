@@ -91,21 +91,23 @@ impl Database {
         // }
     }
 
-    fn flush(self) -> std::io::Result<()> {
-        // self.flushed = true;
+    fn flush(mut self) -> std::io::Result<()> {
+        self.flushed = true;
         do_flush(&self)
     }
 }
 
 impl Drop for Database {
     fn drop(&mut self) {
+        if !self.flushed {
+            let _ = do_flush(&self);
+        }
         // let _ = self.flush();
-        let _ = do_flush(&self);
     }
 }
 
 fn do_flush(database: &Database) -> std::io::Result<()> {
-    println!("Database.flush() called");
+    println!("do_flush() called");
     let mut contents = String::new();
     for (key, value) in &database.map {
         // let kvpair = format!("{}\t{}\n", key, value);
