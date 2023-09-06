@@ -18,17 +18,20 @@ fn main() {
     let mut database =
         Database::new(path).expect(format!("Database::new({:#?}) crashed", filename).as_str());
     println!("Initial Database is: {:?}", database);
-    database.insert(key.to_uppercase(), value.clone());
-    database.insert(key, value);
+    // database.insert(key.to_uppercase(), value.clone());
+    database.insert(key.to_lowercase(), value.clone());
     // database.save(filename);
+    println!("Intermediate Database is: {:?}", database);
+    database.flush().unwrap();
+    database.insert(key.to_uppercase(), value);
     println!("Final Database is: {:?}", database);
-    // database.flush().unwrap();
 }
 
 #[derive(Debug)]
 struct Database {
     path: PathBuf,
     map: HashMap<String, String>,
+    flushed: bool,
 }
 
 impl Database {
@@ -58,11 +61,15 @@ impl Database {
         Ok(Database {
             path: db_filepath,
             map,
+            flushed: false,
         })
     }
 
     // fn insert() -> Result<(), Error> {
     fn insert(&mut self, key: String, value: String) -> () {
+        if self.flushed {
+            panic!("Already called Database::flush() on this instance!\nYou cannot flush twice in the current implementation.")
+        }
         self.map.insert(key, value);
     }
 
@@ -86,23 +93,29 @@ impl Database {
         // }
     }
 
-    fn flush(&self) -> std::io::Result<()> {
-        let mut contents = String::new();
-        for (key, value) in &self.map {
-            // let kvpair = format!("{}\t{}\n", key, value);
-            // contents.push_str(&kvpair);
-            // contents += &kvpair;
-            contents.push_str(key);
-            contents.push('\t');
-            contents.push_str(value);
-            contents.push('\n');
+    fn flush(&mut self) -> std::io::Result<()> {
+        if !self.flushed {
+            println!("Database.flush() called");
+            let mut contents = String::new();
+            for (key, value) in &self.map {
+                // let kvpair = format!("{}\t{}\n", key, value);
+                // contents.push_str(&kvpair);
+                // contents += &kvpair;
+                contents.push_str(key);
+                contents.push('\t');
+                contents.push_str(value);
+                contents.push('\n');
+            }
+            self.flushed = true;
+            std::fs::write(&self.path, contents)
+        } else {
+            return Ok(())
         }
-        std::fs::write(&self.path, contents)
     }
 }
 
 impl Drop for Database {
     fn drop(&mut self) {
-        let _ =  self.flush();
+        let _ = self.flush();
     }
 }
