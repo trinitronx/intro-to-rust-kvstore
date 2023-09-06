@@ -22,7 +22,8 @@ fn main() {
     database.insert(key.to_lowercase(), value.clone());
     // database.save(filename);
     println!("Intermediate Database is: {:?}", database);
-    database.flush().unwrap();
+    // database.flush().unwrap();
+    // If flush() is called above, The following will not compile because flush(self) moves the database into the function scope
     database.insert(key.to_uppercase(), value);
     println!("Final Database is: {:?}", database);
 }
@@ -67,9 +68,6 @@ impl Database {
 
     // fn insert() -> Result<(), Error> {
     fn insert(&mut self, key: String, value: String) -> () {
-        if self.flushed {
-            panic!("Already called Database::flush() on this instance!\nYou cannot flush twice in the current implementation.")
-        }
         self.map.insert(key, value);
     }
 
@@ -93,29 +91,30 @@ impl Database {
         // }
     }
 
-    fn flush(&mut self) -> std::io::Result<()> {
-        if !self.flushed {
-            println!("Database.flush() called");
-            let mut contents = String::new();
-            for (key, value) in &self.map {
-                // let kvpair = format!("{}\t{}\n", key, value);
-                // contents.push_str(&kvpair);
-                // contents += &kvpair;
-                contents.push_str(key);
-                contents.push('\t');
-                contents.push_str(value);
-                contents.push('\n');
-            }
-            self.flushed = true;
-            std::fs::write(&self.path, contents)
-        } else {
-            return Ok(())
-        }
+    fn flush(self) -> std::io::Result<()> {
+        // self.flushed = true;
+        do_flush(&self)
     }
 }
 
 impl Drop for Database {
     fn drop(&mut self) {
-        let _ = self.flush();
+        // let _ = self.flush();
+        let _ = do_flush(&self);
     }
+}
+
+fn do_flush(database: &Database) -> std::io::Result<()> {
+    println!("Database.flush() called");
+    let mut contents = String::new();
+    for (key, value) in &database.map {
+        // let kvpair = format!("{}\t{}\n", key, value);
+        // contents.push_str(&kvpair);
+        // contents += &kvpair;
+        contents.push_str(key);
+        contents.push('\t');
+        contents.push_str(value);
+        contents.push('\n');
+    }
+    std::fs::write(&database.path, contents)
 }
