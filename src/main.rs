@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Error, path::PathBuf};
+use std::{collections::HashMap, io::Error, path::{PathBuf, Path}};
 fn main() {
     let mut argv = std::env::args().skip(1);
     let key = argv
@@ -11,11 +11,14 @@ fn main() {
     let filename = "/tmp/kvstore.db";
     let path = PathBuf::new().with_file_name(filename);
 
-    let database =
-        Database::new(path).expect(format!("Database::new(\"{:#?}\") crashed", filename).as_str());
-    println!("Database is: {:?}", database);
+    let mut database =
+        Database::new(path).expect(format!("Database::new({:#?}) crashed", filename).as_str());
+    println!("Initial Database is: {:?}", database);
+    database.insert(key.to_uppercase(), value.clone());
     database.insert(key, value);
     // database.save(filename);
+    println!("Final Database is: {:?}", database);
+    database.flush().unwrap();
 }
 
 #[derive(Debug)]
@@ -26,14 +29,27 @@ struct Database {
 
 impl Database {
     fn new(db_filepath: PathBuf) -> Result<Database, Error> {
-        // read the DB file
         let mut m: HashMap<String, String> = HashMap::new();
-        let contents = std::fs::read_to_string(&db_filepath)?;
-        // parse the string
-        for line in contents.lines() {
-            let (key, value) = line.split_once('\t').expect("Corrupt database");
-            m.insert(key.to_owned(), value.to_owned());
+        // read the DB file
+        if !db_filepath.exists() {
+            let _maybe_parent_dir = db_filepath.parent();
+            let parent_dir = _maybe_parent_dir.unwrap_or_else(|| Path::new("."));
+            if !parent_dir.exists() {
+                std::fs::create_dir_all(parent_dir)?;
+            } //else if parent_dir.exists() && !parent_dir.is_dir() {
+                // return std::io::Error
+                // Err(format!("Path exists: {:?}", parent_dir.to_str()));
+            // }
+        } else {
+            let contents = std::fs::read_to_string(&db_filepath)?;
+
+            // parse the string
+            for line in contents.lines() {
+                let (key, value) = line.split_once('\t').expect("Corrupt database");
+                m.insert(key.to_owned(), value.to_owned());
+            }
         }
+
         // populate our map
         Ok(Database {
             path: db_filepath,
@@ -42,7 +58,7 @@ impl Database {
     }
 
     // fn insert() -> Result<(), Error> {
-    fn insert(&self, key: String, value: String) -> () {
+    fn insert(&mut self, key: String, value: String) -> () {
         self.map.insert(key, value);
     }
 
@@ -65,4 +81,9 @@ impl Database {
         //     }
         // }
     }
+
+    fn flush(self) -> std::io::Result<()> {
+        todo!("Implement database.flush() method")
+    }
+
 }
