@@ -22,7 +22,7 @@ fn main() {
     database.insert(key.to_lowercase(), value.clone());
     // database.save(filename);
     println!("Intermediate Database is: {:?}", database);
-    // database.flush().unwrap();
+    database.flush().unwrap();
     // If flush() is called above, The following will not compile because flush(self) moves the database into the function scope
     database.insert(key.to_uppercase(), value);
     println!("Final Database is: {:?}", database);
@@ -91,7 +91,7 @@ impl Database {
         // }
     }
 
-    fn flush(mut self) -> std::io::Result<()> {
+    fn flush(&mut self) -> std::io::Result<()> {
         self.flushed = true;
         do_flush(&self)
     }
@@ -99,9 +99,9 @@ impl Database {
 
 impl Drop for Database {
     fn drop(&mut self) {
-        if !self.flushed {
+        // if !self.flushed {
             let _ = do_flush(&self);
-        }
+        // }
         // let _ = self.flush();
     }
 }
