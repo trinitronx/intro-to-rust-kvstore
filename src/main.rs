@@ -83,7 +83,12 @@ impl Database {
     }
 
     fn flush(self) -> std::io::Result<()> {
-        todo!("Implement database.flush() method")
+        let mut contents = String::new();
+        for pairs in self.map {
+            let kvpair = format!("{}\t{}\n", pairs.0, pairs.1);
+            contents.push_str(&kvpair);
+            // contents += &kvpair;
+        }
+        std::fs::write(self.path, contents)
     }
-
 }
