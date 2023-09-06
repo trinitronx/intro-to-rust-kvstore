@@ -1,4 +1,8 @@
-use std::{collections::HashMap, io::Error, path::{PathBuf, Path}};
+use std::{
+    collections::HashMap,
+    io::Error,
+    path::{Path, PathBuf},
+};
 fn main() {
     let mut argv = std::env::args().skip(1);
     let key = argv
@@ -18,7 +22,7 @@ fn main() {
     database.insert(key, value);
     // database.save(filename);
     println!("Final Database is: {:?}", database);
-    database.flush().unwrap();
+    // database.flush().unwrap();
 }
 
 #[derive(Debug)]
@@ -29,7 +33,7 @@ struct Database {
 
 impl Database {
     fn new(db_filepath: PathBuf) -> Result<Database, Error> {
-        let mut m: HashMap<String, String> = HashMap::new();
+        let mut map: HashMap<String, String> = HashMap::new();
         // read the DB file
         if !db_filepath.exists() {
             let _maybe_parent_dir = db_filepath.parent();
@@ -37,23 +41,23 @@ impl Database {
             if !parent_dir.exists() {
                 std::fs::create_dir_all(parent_dir)?;
             } //else if parent_dir.exists() && !parent_dir.is_dir() {
-                // return std::io::Error
-                // Err(format!("Path exists: {:?}", parent_dir.to_str()));
-            // }
+              // return std::io::Error
+              // Err(format!("Path exists: {:?}", parent_dir.to_str()));
+              // }
         } else {
             let contents = std::fs::read_to_string(&db_filepath)?;
 
             // parse the string
             for line in contents.lines() {
                 let (key, value) = line.split_once('\t').expect("Corrupt database");
-                m.insert(key.to_owned(), value.to_owned());
+                map.insert(key.to_owned(), value.to_owned());
             }
         }
 
         // populate our map
         Ok(Database {
             path: db_filepath,
-            map: m,
+            map,
         })
     }
 
@@ -93,6 +97,22 @@ impl Database {
             contents.push_str(value);
             contents.push('\n');
         }
-        std::fs::write(self.path, contents)
+        std::fs::write(&self.path, contents)
+    }
+}
+
+impl Drop for Database {
+    fn drop(&mut self) {
+        let mut contents = String::new();
+        for (key, value) in &self.map {
+            // let kvpair = format!("{}\t{}\n", key, value);
+            // contents.push_str(&kvpair);
+            // contents += &kvpair;
+            contents.push_str(key);
+            contents.push('\t');
+            contents.push_str(value);
+            contents.push('\n');
+        }
+        let _ = std::fs::write(&self.path, contents);
     }
 }
