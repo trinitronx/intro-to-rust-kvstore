@@ -93,30 +93,26 @@ impl Database {
 
     fn flush(&mut self) -> std::io::Result<()> {
         self.flushed = true;
-        do_flush(&self)
+        println!("database.flush() called");
+        let mut contents = String::new();
+        for (key, value) in &self.map {
+            // let kvpair = format!("{}\t{}\n", key, value);
+            // contents.push_str(&kvpair);
+            // contents += &kvpair;
+            contents.push_str(key);
+            contents.push('\t');
+            contents.push_str(value);
+            contents.push('\n');
+        }
+        std::fs::write(&self.path, contents)
     }
 }
 
 impl Drop for Database {
     fn drop(&mut self) {
         // if !self.flushed {
-            let _ = do_flush(&self);
+        let _ = self.flush();
         // }
         // let _ = self.flush();
     }
-}
-
-fn do_flush(database: &Database) -> std::io::Result<()> {
-    println!("do_flush() called");
-    let mut contents = String::new();
-    for (key, value) in &database.map {
-        // let kvpair = format!("{}\t{}\n", key, value);
-        // contents.push_str(&kvpair);
-        // contents += &kvpair;
-        contents.push_str(key);
-        contents.push('\t');
-        contents.push_str(value);
-        contents.push('\n');
-    }
-    std::fs::write(&database.path, contents)
 }
