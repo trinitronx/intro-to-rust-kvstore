@@ -84,8 +84,8 @@ impl Database {
 
     fn flush(self) -> std::io::Result<()> {
         let mut contents = String::new();
-        for pairs in self.map {
-            let kvpair = format!("{}\t{}\n", pairs.0, pairs.1);
+        for (key, value) in &self.map {
+            let kvpair = format!("{}\t{}\n", key, value);
             contents.push_str(&kvpair);
             // contents += &kvpair;
         }
