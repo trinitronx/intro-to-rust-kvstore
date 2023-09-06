@@ -86,7 +86,7 @@ impl Database {
         // }
     }
 
-    fn flush(self) -> std::io::Result<()> {
+    fn flush(&self) -> std::io::Result<()> {
         let mut contents = String::new();
         for (key, value) in &self.map {
             // let kvpair = format!("{}\t{}\n", key, value);
@@ -103,16 +103,6 @@ impl Database {
 
 impl Drop for Database {
     fn drop(&mut self) {
-        let mut contents = String::new();
-        for (key, value) in &self.map {
-            // let kvpair = format!("{}\t{}\n", key, value);
-            // contents.push_str(&kvpair);
-            // contents += &kvpair;
-            contents.push_str(key);
-            contents.push('\t');
-            contents.push_str(value);
-            contents.push('\n');
-        }
-        let _ = std::fs::write(&self.path, contents);
+        let _ =  self.flush();
     }
 }
