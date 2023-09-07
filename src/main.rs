@@ -95,23 +95,28 @@ impl Database {
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        println!("database.flush() called");
-        let mut contents = String::new();
-        for (key, value) in &self.map {
-            contents.push_str(key);
-            contents.push('\t');
-            contents.push_str(value);
-            contents.push('\n');
-        }
-        match std::fs::write(&self.path, contents) {
-            Ok(()) => { 
-                self.dirty = false;
-                Ok(())
-            },
-            Err(e) => {
-                println!("Error during Database::flush(): {:?}", e);
-                Err(e)
+        if self.dirty {
+            println!("database.flush() called");
+
+            let mut contents = String::new();
+            for (key, value) in &self.map {
+                contents.push_str(key);
+                contents.push('\t');
+                contents.push_str(value);
+                contents.push('\n');
             }
+            match std::fs::write(&self.path, contents) {
+                Ok(()) => {
+                    self.dirty = false;
+                    Ok(())
+                }
+                Err(e) => {
+                    println!("Error during Database::flush(): {:?}", e);
+                    Err(e)
+                }
+            }
+        } else {
+            Ok(())
         }
     }
 }
