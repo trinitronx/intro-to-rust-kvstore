@@ -23,7 +23,9 @@ fn main() {
     // database.save(filename);
     println!("Intermediate Database is: {:?}", database);
     database.flush().unwrap();
-    // If flush() is called above, The following will not compile because flush(self) moves the database into the function scope
+    println!("Post-flush() Database is: {:?}", database);
+    // If flush() is called above, The following will compile because flush(&mut self) borrows the database inside the function scope
+    // If we comment this line out, the dirty bit is not reset so we don't need to flush in drop() destructor
     database.insert(key.to_uppercase(), value);
     println!("Final Database is: {:?}", database);
 }
@@ -32,7 +34,7 @@ fn main() {
 struct Database {
     path: PathBuf,
     map: HashMap<String, String>,
-    flushed: bool,
+    dirty: bool,
 }
 
 impl Database {
@@ -62,13 +64,14 @@ impl Database {
         Ok(Database {
             path: db_filepath,
             map,
-            flushed: false,
+            dirty: false,
         })
     }
 
     // fn insert() -> Result<(), Error> {
     fn insert(&mut self, key: String, value: String) -> () {
         self.map.insert(key, value);
+        self.dirty |= true;
     }
 
     fn save(&self, filename: &str) -> Result<(), Error> {
@@ -92,27 +95,31 @@ impl Database {
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        self.flushed = true;
         println!("database.flush() called");
         let mut contents = String::new();
         for (key, value) in &self.map {
-            // let kvpair = format!("{}\t{}\n", key, value);
-            // contents.push_str(&kvpair);
-            // contents += &kvpair;
             contents.push_str(key);
             contents.push('\t');
             contents.push_str(value);
             contents.push('\n');
         }
-        std::fs::write(&self.path, contents)
+        match std::fs::write(&self.path, contents) {
+            Ok(()) => { 
+                self.dirty = false;
+                Ok(())
+            },
+            Err(e) => {
+                println!("Error during Database::flush(): {:?}", e);
+                Err(e)
+            }
+        }
     }
 }
 
 impl Drop for Database {
     fn drop(&mut self) {
-        if !self.flushed {
+        if self.dirty {
             let _ = self.flush();
         }
-        // let _ = self.flush();
     }
 }
