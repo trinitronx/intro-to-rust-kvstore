@@ -110,9 +110,9 @@ impl Database {
 
 impl Drop for Database {
     fn drop(&mut self) {
-        // if !self.flushed {
-        let _ = self.flush();
-        // }
+        if !self.flushed {
+            let _ = self.flush();
+        }
         // let _ = self.flush();
     }
 }
