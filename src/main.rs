@@ -1,8 +1,11 @@
+#![feature(unix_sigpipe)]
 use std::{
     collections::HashMap,
     io::Error,
     path::{Path, PathBuf},
 };
+
+#[unix_sigpipe = "sig_dfl"]
 fn main() {
     let mut argv = std::env::args().skip(1);
     let key = argv
